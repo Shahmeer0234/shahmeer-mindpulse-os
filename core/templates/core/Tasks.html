@@ -1,0 +1,385 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<style>
+    /* Time Display & Glassmorphism Styling */
+    .time-display {
+        font-size: 3.8rem;
+        font-weight: 800;
+        font-family: 'Courier New', Courier, monospace;
+        letter-spacing: 3px;
+        color: #0f172a;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .nav-pills .nav-link {
+        border-radius: 10px;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    
+    .task-card {
+        border: none;
+        border-left: 5px solid #2563eb;
+        border-radius: 12px;
+        background: #ffffff;
+        transition: all 0.25s ease;
+    }
+    
+    .task-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.06) !important;
+    }
+
+    .action-btn {
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .tool-card {
+        border-radius: 18px;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-list-check text-primary me-2"></i>Task & Focus Hub</h2>
+            <p class="text-muted mb-0">Manage your goals, run timers, stopwatch, and alarms in one place.</p>
+        </div>
+    </div>
+
+    <!-- TOP SECTION: Multi-Tool Focus Widget (Timer, Stopwatch, Alarm) -->
+    <div class="card shadow-sm border-0 mb-4 tool-card">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-center">
+            <ul class="nav nav-pills p-1 bg-light rounded-3 border" id="timeToolsTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active px-4 py-2" id="timer-tab" data-bs-toggle="pill" data-bs-target="#timer-pane" type="button"><i class="fa-solid fa-stopwatch me-2"></i>Focus Timer</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-2" id="stopwatch-tab" data-bs-toggle="pill" data-bs-target="#stopwatch-pane" type="button"><i class="fa-solid fa-clock me-2"></i>Stopwatch</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-2" id="alarm-tab" data-bs-toggle="pill" data-bs-target="#alarm-pane" type="button"><i class="fa-solid fa-bell me-2"></i>Alarm</button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4 text-center">
+            <div class="tab-content" id="timeToolsTabContent">
+                
+                <!-- 1. FOCUS TIMER PANE -->
+                <div class="tab-pane fade show active" id="timer-pane" role="tabpanel">
+                    <div class="d-flex justify-content-center align-items-center mb-2">
+                        <label class="fw-bold text-secondary me-2 small">Target Duration:</label>
+                        <select id="durationSelect" class="form-select form-select-sm w-auto fw-bold shadow-sm rounded-3">
+                            <option value="10">10 Mins</option>
+                            <option value="15">15 Mins</option>
+                            <option value="25" selected>25 Mins</option>
+                            <option value="45">45 Mins</option>
+                            <option value="60">60 Mins</option>
+                        </select>
+                    </div>
+
+                    <div class="time-display my-1" id="timerDisplay">25:00</div>
+
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <button id="timerStartBtn" class="btn btn-primary px-4 fw-bold action-btn shadow-sm"><i class="fa-solid fa-play me-1"></i> Start</button>
+                        <button id="timerPauseBtn" class="btn btn-warning px-4 fw-bold text-dark action-btn shadow-sm" disabled><i class="fa-solid fa-pause me-1"></i> Pause</button>
+                        <button id="timerResetBtn" class="btn btn-outline-secondary px-4 fw-bold action-btn"><i class="fa-solid fa-rotate-left me-1"></i> Reset</button>
+                    </div>
+                </div>
+
+                <!-- 2. STOPWATCH PANE (Accurate Timestamp Logic) -->
+                <div class="tab-pane fade" id="stopwatch-pane" role="tabpanel">
+                    <div class="time-display my-2" id="swDisplay">00:00:00</div>
+
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <button id="swStartBtn" class="btn btn-success px-4 fw-bold action-btn shadow-sm"><i class="fa-solid fa-play me-1"></i> Start</button>
+                        <button id="swPauseBtn" class="btn btn-warning px-4 fw-bold text-dark action-btn shadow-sm" disabled><i class="fa-solid fa-pause me-1"></i> Pause</button>
+                        <button id="swResetBtn" class="btn btn-outline-secondary px-4 fw-bold action-btn"><i class="fa-solid fa-rotate-left me-1"></i> Reset</button>
+                    </div>
+                </div>
+
+                <!-- 3. ALARM PANE -->
+                <div class="tab-pane fade" id="alarm-pane" role="tabpanel">
+                    <div class="d-flex justify-content-center align-items-center gap-2 my-3">
+                        <input type="time" id="alarmTimeInput" class="form-control form-control-lg w-auto fw-bold rounded-3 shadow-sm">
+                        <button id="setAlarmBtn" class="btn btn-danger btn-lg px-4 fw-bold action-btn shadow-sm"><i class="fa-solid fa-bell me-1"></i> Set Alarm</button>
+                    </div>
+                    <div id="alarmStatus" class="fw-bold text-secondary mt-2 small">No active alarm set.</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT ROW: Add Task & Active Tasks Register -->
+    <div class="row">
+        <!-- Left Column: Add Task Form -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm border-0 p-4" style="border-radius: 18px;">
+                <h4 class="fw-bold mb-3 text-dark fs-5"><i class="fa-solid fa-plus-circle text-success me-2"></i>Add New Task</h4>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Task Title</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Notes / Details (Optional)</label>
+                        {{ form.description }}
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm action-btn">
+                        <i class="fa-solid fa-plus me-1"></i> Add Task
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Active Tasks & Collapsible History Vault -->
+        <div class="col-lg-7">
+            <!-- Active Tasks Card -->
+            <div class="card shadow-sm border-0 p-4 mb-4" style="border-radius: 18px;">
+                <h4 class="fw-bold mb-3 text-dark fs-5"><i class="fa-solid fa-tasks text-primary me-2"></i>Active Tasks</h4>
+                
+                <div style="max-height: 380px; overflow-y: auto;" class="pe-1">
+                    {% if tasks %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for task in tasks %}
+                                {% if not task.is_completed %}
+                                    <div class="card task-card p-3 shadow-sm">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="fw-bold mb-1 text-dark fs-6">{{ task.title }}</h5>
+                                                {% if task.description %}
+                                                    <p class="text-muted small mb-0">{{ task.description }}</p>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a href="{% url 'toggle_task' task.id %}" class="btn btn-sm btn-success fw-bold px-3 shadow-sm action-btn">
+                                                    <i class="fa-solid fa-check me-1"></i> Done
+                                                </a>
+                                                <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-outline-danger fw-bold px-2 action-btn" onclick="return confirm('Kya aap is task को delete karna chahte hain?');" title="Delete Task">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-clipboard-check fa-2x mb-2 text-secondary"></i>
+                            <p class="mb-0">No active tasks pending. Add a new task to get started!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Completed History Vault (Hidden / Collapsible) -->
+            <div class="card shadow-sm border-0 p-3 bg-light" style="border-radius: 16px;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-box-archive me-2"></i>Completed History Vault</h6>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#completedVault">
+                        Show / Hide
+                    </button>
+                </div>
+                
+                <div class="collapse mt-3" id="completedVault">
+                    <div style="max-height: 220px; overflow-y: auto;">
+                        <ul class="list-group">
+                            {% for task in tasks %}
+                                {% if task.is_completed %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-white border-0 shadow-sm mb-2 rounded-3">
+                                        <span class="text-decoration-line-through text-muted fw-semibold">{{ task.title }}</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{% url 'toggle_task' task.id %}" class="btn btn-sm btn-outline-secondary action-btn">Undo</a>
+                                            <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-outline-danger border-0 action-btn" onclick="return confirm('Kya aap is completed task ko hamesha ke liye delete karna chahte hain?');" title="Delete Task">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Audio for Alarm Alert -->
+<audio id="alarmAudio" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+
+<script>
+    // ---------------- FOCUS TIMER ----------------
+    let timerDisplay = document.getElementById("timerDisplay");
+    let timerStartBtn = document.getElementById("timerStartBtn");
+    let timerPauseBtn = document.getElementById("timerPauseBtn");
+    let timerResetBtn = document.getElementById("timerResetBtn");
+    let durationSelect = document.getElementById("durationSelect");
+
+    let timerInterval = null;
+    let timerSecs = parseInt(durationSelect.value) * 60;
+    let timerRunning = false;
+
+    function renderTimer() {
+        let m = Math.floor(timerSecs / 60);
+        let s = timerSecs % 60;
+        timerDisplay.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    durationSelect.addEventListener("change", function() {
+        if (!timerRunning) {
+            timerSecs = parseInt(this.value) * 60;
+            renderTimer();
+        }
+    });
+
+    timerStartBtn.addEventListener("click", function() {
+        if (!timerRunning) {
+            timerRunning = true;
+            timerStartBtn.disabled = true;
+            timerPauseBtn.disabled = false;
+            durationSelect.disabled = true;
+
+            timerInterval = setInterval(() => {
+                if (timerSecs > 0) {
+                    timerSecs--;
+                    renderTimer();
+                } else {
+                    clearInterval(timerInterval);
+                    timerRunning = false;
+                    document.getElementById("alarmAudio").play();
+                    alert("Focus session complete!");
+                    timerStartBtn.disabled = false;
+                    timerPauseBtn.disabled = true;
+                    durationSelect.disabled = false;
+                }
+            }, 1000);
+        }
+    });
+
+    timerPauseBtn.addEventListener("click", function() {
+        if (timerRunning) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerStartBtn.disabled = false;
+            timerPauseBtn.disabled = true;
+        }
+    });
+
+    timerResetBtn.addEventListener("click", function() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerSecs = parseInt(durationSelect.value) * 60;
+        renderTimer();
+        timerStartBtn.disabled = false;
+        timerPauseBtn.disabled = true;
+        durationSelect.disabled = false;
+    });
+
+    // ---------------- STOPWATCH (Drift-Free Timestamp Logic) ----------------
+    let swDisplay = document.getElementById("swDisplay");
+    let swStartBtn = document.getElementById("swStartBtn");
+    let swPauseBtn = document.getElementById("swPauseBtn");
+    let swResetBtn = document.getElementById("swResetBtn");
+
+    let swInterval = null;
+    let swStartTime = 0;
+    let swElapsedTime = 0;
+    let swRunning = false;
+
+    function renderStopwatch() {
+        let totalSecs = Math.floor(swElapsedTime / 1000);
+        let h = Math.floor(totalSecs / 3600);
+        let m = Math.floor((totalSecs % 3600) / 60);
+        let s = totalSecs % 60;
+        swDisplay.innerText = `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    swStartBtn.addEventListener("click", function() {
+        if (!swRunning) {
+            swRunning = true;
+            swStartBtn.disabled = true;
+            swPauseBtn.disabled = false;
+            swStartTime = Date.now() - swElapsedTime;
+            swInterval = setInterval(() => {
+                swElapsedTime = Date.now() - swStartTime;
+                renderStopwatch();
+            }, 200);
+        }
+    });
+
+    swPauseBtn.addEventListener("click", function() {
+        if (swRunning) {
+            clearInterval(swInterval);
+            swElapsedTime = Date.now() - swStartTime;
+            swRunning = false;
+            swStartBtn.disabled = false;
+            swPauseBtn.disabled = true;
+        }
+    });
+
+    swResetBtn.addEventListener("click", function() {
+        clearInterval(swInterval);
+        swRunning = false;
+        swStartTime = 0;
+        swElapsedTime = 0;
+        renderStopwatch();
+        swStartBtn.disabled = false;
+        swPauseBtn.disabled = true;
+    });
+
+    // ---------------- ALARM SYSTEM ----------------
+    let setAlarmBtn = document.getElementById("setAlarmBtn");
+    let alarmTimeInput = document.getElementById("alarmTimeInput");
+    let alarmStatus = document.getElementById("alarmStatus");
+    let alarmInterval = null;
+    let targetAlarmTime = null;
+
+    setAlarmBtn.addEventListener("click", function() {
+        let val = alarmTimeInput.value;
+        if (!val) {
+            alert("Please select a valid time for the alarm!");
+            return;
+        }
+
+        targetAlarmTime = val;
+        alarmStatus.innerText = `🔔 Alarm set for ${targetAlarmTime}`;
+        alarmStatus.className = "fw-bold text-success mt-2 small";
+
+        if (alarmInterval) clearInterval(alarmInterval);
+
+        alarmInterval = setInterval(() => {
+            let now = new Date();
+            let current = `${now.getHours() < 10 ? '0' : ''}${now.getHours()}:${now.getMinutes() < 10 ? '0' : ''}${now.getMinutes()}`;
+            if (current === targetAlarmTime) {
+                document.getElementById("alarmAudio").play();
+                alert(`⏰ Alarm Alert! It's ${targetAlarmTime}`);
+                clearInterval(alarmInterval);
+                alarmStatus.innerText = "No active alarm set.";
+                alarmStatus.className = "fw-bold text-secondary mt-2 small";
+            }
+        }, 1000);
+    });
+</script>
+
+{% endblock %}

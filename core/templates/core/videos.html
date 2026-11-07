@@ -1,0 +1,139 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<style>
+    /* Browser ke unwanted video download overlays/buttons ko hide karne ke liye */
+    video::-internal-media-controls-download-button {
+        display: none !important;
+    }
+    video::-webkit-media-controls-download-button {
+        display: none !important;
+    }
+    video::-webkit-media-controls-enclosure {
+        overflow: hidden !important;
+    }
+    
+    .vault-header {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+    }
+    .video-card {
+        border: none;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s ease;
+    }
+    .video-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 22px rgba(0,0,0,0.08) !important;
+    }
+    .video-container {
+        background: #000000;
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+    }
+    .upload-card {
+        border-radius: 16px;
+        border: none;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+    }
+    .action-btn {
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    .action-btn:hover {
+        transform: scale(1.03);
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Header Banner -->
+    <div class="vault-header shadow-sm mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1 text-white"><i class="fa-solid fa-video text-danger me-2"></i>Motivational Media Vault</h2>
+            <p class="text-secondary mb-0 text-light opacity-75">Stream and manage your local motivational and focus videos cleanly.</p>
+        </div>
+        <div>
+            <span class="badge bg-danger px-3 py-2 fs-6 rounded-pill"><i class="fa-solid fa-film me-1"></i> Vault Active</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Upload Video Form -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm upload-card p-4 sticky-top" style="top: 20px;">
+                <h4 class="fw-bold mb-3 text-dark fs-5"><i class="fa-solid fa-cloud-arrow-up text-primary me-2"></i>Upload New Video</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Video Title</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Select Local File (.mp4)</label>
+                        {{ form.video_file }}
+                        <div class="form-text small text-muted">Supports MP4, WebM formats.</div>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold shadow-sm action-btn">
+                        <i class="fa-solid fa-upload me-1"></i> Upload to Vault
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Video Library Grid -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 p-4 mb-4" style="border-radius: 16px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark fs-5 mb-0"><i class="fa-solid fa-photo-film text-danger me-2"></i>Your Video Collection</h4>
+                    <span class="text-muted small fw-semibold">Total: {{ videos|length }} Videos</span>
+                </div>
+
+                <div style="max-height: 650px; overflow-y: auto;" class="pe-1">
+                    {% if videos %}
+                        <div class="row g-4">
+                            {% for v in videos %}
+                                <div class="col-md-6">
+                                    <div class="card video-card h-100 border">
+                                        <div class="video-container">
+                                            <video width="100%" height="180" controls controlsList="nodownload" class="w-100" style="object-fit: cover;">
+                                                <source src="{{ v.video_file.url }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                        <div class="card-body d-flex flex-column justify-content-between p-3">
+                                            <div>
+                                                <h5 class="fw-bold text-dark fs-6 text-truncate mb-1" title="{{ v.title }}">{{ v.title }}</h5>
+                                                <small class="text-muted d-block mb-3"><i class="fa-regular fa-calendar-days me-1"></i> Added: {{ v.uploaded_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <!-- Clean Action Buttons on the side/bottom -->
+                                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                                <a href="{{ v.video_file.url }}" download class="btn btn-sm btn-outline-primary action-btn">
+                                                    <i class="fa-solid fa-download me-1"></i> Download
+                                                </a>
+                                                <a href="#" class="btn btn-sm btn-outline-danger action-btn" onclick="alert('Delete feature can be linked if required!');" title="Remove">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-film fa-3x mb-3 text-secondary opacity-50"></i>
+                            <h5 class="fw-bold text-dark">No Videos in Vault Yet</h5>
+                            <p class="small text-muted mb-0">Use the upload panel on the left to add your personal motivational videos.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

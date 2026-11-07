@@ -1,0 +1,191 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<style>
+    .dash-hero {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        color: white;
+        border-radius: 18px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
+    }
+    .chart-container {
+        position: relative; 
+        height: 320px; 
+        width: 100%;
+    }
+    .action-badge {
+        font-size: 0.85rem;
+        padding: 6px 14px;
+        border-radius: 20px;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Hero Banner -->
+    <div class="dash-hero mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1 text-white"><i class="fa-solid fa-shield-halved text-primary me-2"></i>Shahmeer's Productivity Command Center</h2>
+            <p class="text-secondary mb-0 text-light opacity-75">Welcome back, Shahmeer! Monitoring your cognitive performance, tasks, and focus streams.</p>
+        </div>
+        <div>
+            <span class="badge bg-success action-badge shadow-sm"><i class="fa-solid fa-circle-dot me-1"></i> System Online</span>
+        </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Total Tasks Card -->
+        <div class="col-md-4">
+            <div class="card stat-card p-4 border-start border-primary border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 small fw-bold text-uppercase">Total Tasks Registered</p>
+                        <h3 class="fw-bold text-dark mb-0 display-6">{{ total_tasks }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                        <i class="fa-solid fa-list-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Goals Card -->
+        <div class="col-md-4">
+            <div class="card stat-card p-4 border-start border-success border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 small fw-bold text-uppercase">Completed Goals</p>
+                        <h3 class="fw-bold text-success mb-0 display-6">{{ completed_tasks }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                        <i class="fa-solid fa-circle-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Status Card -->
+        <div class="col-md-4">
+            <div class="card stat-card p-4 border-start border-warning border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 small fw-bold text-uppercase">Current Energy Status</p>
+                        <h3 class="fw-bold text-warning mb-0 fs-3 text-truncate" style="max-width: 180px;">{{ latest_checkin.starting_mood|default:"Not Checked In" }}</h3>
+                        {% if latest_checkin %}
+                            <small class="text-muted">Level: {{ latest_checkin.energy_level }}/10</small>
+                        {% endif %}
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                        <i class="fa-solid fa-bolt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Weekly Fatigue & Focus Trends Chart -->
+        <div class="col-lg-8">
+            <div class="card stat-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark fs-5 mb-0"><i class="fa-solid fa-chart-line text-primary me-2"></i>Weekly Cognitive Fatigue & Focus Trends</h4>
+                    <span class="badge bg-light text-secondary border">Real-time Data</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="fatigueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Quick Daily Energy Check-In Widget -->
+        <div class="col-lg-4">
+            <div class="card stat-card p-4 h-100">
+                <h4 class="fw-bold text-dark fs-5 mb-3"><i class="fa-solid fa-battery-half text-warning me-2"></i>Daily Energy Check-In</h4>
+                <p class="text-muted small mb-3">Log your current state to fine-tune your psychological predictor score.</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Current Mood</label>
+                        <select name="starting_mood" class="form-select shadow-sm">
+                            <option value="Energetic">⚡ Energetic</option>
+                            <option value="Calm">🧘 Calm</option>
+                            <option value="Tired">🥱 Tired</option>
+                            <option value="Stressed">⚠️ Stressed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small">Energy Level (1 to 10)</label>
+                        <input type="number" name="energy_level" class="form-control shadow-sm" min="1" max="10" placeholder="e.g. 8" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm py-2">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Save Check-In
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ session_labels|json_script:"sessionLabelsData" }}
+{{ fatigue_scores|json_script:"fatigueScoresData" }}
+
+<script>
+    const ctx = document.getElementById('fatigueChart').getContext('2d');
+    const sessionLabels = JSON.parse(document.getElementById('sessionLabelsData').textContent);
+    const fatigueScores = JSON.parse(document.getElementById('fatigueScoresData').textContent);
+
+    // Gradient fill for chart
+    let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
+    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: sessionLabels.length > 0 ? sessionLabels : ['No Sessions Yet'],
+            datasets: [{
+                label: 'Cognitive Fatigue Score (%)',
+                data: fatigueScores.length > 0 ? fatigueScores : [0],
+                borderColor: '#2563eb',
+                backgroundColor: gradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#1d4ed8',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    max: 100,
+                    grid: { color: '#f1f5f9' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

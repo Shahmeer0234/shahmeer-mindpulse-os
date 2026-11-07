@@ -1,0 +1,103 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<style>
+    .quest-hero {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.2);
+    }
+    .streak-card {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        transition: transform 0.3s;
+    }
+    .streak-card:hover {
+        transform: translateY(-3px);
+    }
+    .quest-box {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border: 2px dashed #cbd5e1;
+        border-radius: 18px;
+        transition: all 0.3s ease;
+    }
+    .quest-box.completed {
+        background: linear-gradient(145deg, #ecfdf5, #d1fae5);
+        border: 2px solid #10b981;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Hero Banner -->
+    <div class="quest-hero mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1 text-white"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Neural Quests & Daily Surprises</h2>
+            <p class="text-light opacity-80 mb-0">Break boredom with unexpected psychological & physical challenges tailored for Shahmeer.</p>
+        </div>
+        <div>
+            <span class="badge bg-white text-dark px-3 py-2 fs-6 rounded-pill fw-bold shadow-sm">
+                <i class="fa-solid fa-fire text-danger me-1"></i> Streak: {{ streak.current_streak }} Days
+            </span>
+        </div>
+    </div>
+
+    <!-- Streak Stats Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card streak-card p-4 border-start border-danger border-4 h-100 shadow-sm">
+                <p class="text-muted mb-1 small fw-bold text-uppercase">Current Active Streak</p>
+                <h3 class="fw-bold text-danger mb-0 display-6">{{ streak.current_streak }} <span class="fs-5 text-muted">Days</span></h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card streak-card p-4 border-start border-primary border-4 h-100 shadow-sm">
+                <p class="text-muted mb-1 small fw-bold text-uppercase">Longest Streak Record</p>
+                <h3 class="fw-bold text-primary mb-0 display-6">{{ streak.longest_streak }} <span class="fs-5 text-muted">Days</span></h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card streak-card p-4 border-start border-warning border-4 h-100 shadow-sm">
+                <p class="text-muted mb-1 small fw-bold text-uppercase">Total Broken Streaks</p>
+                <h3 class="fw-bold text-warning mb-0 display-6">{{ streak.total_broken_count }} <span class="fs-5 text-muted">Times</span></h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Assigned Quest Box -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm border-0 p-5 quest-box {% if daily_quest.is_completed %}completed{% endif %}">
+                <div class="text-center py-3">
+                    <span class="badge bg-secondary mb-3 px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-tag me-1"></i> Category: {{ daily_quest.quest.category }}
+                    </span>
+                    <h1 class="fw-bold text-dark display-6 mb-3">🎲 Today's Neural Challenge</h1>
+                    <h3 class="fw-bold text-indigo mb-3" style="color: #4f46e5;">"{{ daily_quest.quest.title }}"</h3>
+                    <p class="text-secondary lead mx-auto mb-4" style="max-width: 700px;">
+                        {{ daily_quest.quest.description }}
+                    </p>
+
+                    {% if daily_quest.is_completed %}
+                        <div class="alert alert-success d-inline-block px-4 py-2 rounded-pill fw-bold shadow-sm">
+                            <i class="fa-solid fa-circle-check text-success me-2"></i> Quest Completed Successfully! Streak Maintained.
+                        </div>
+                    {% else %}
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="complete">
+                            <button type="submit" class="btn btn-success btn-lg px-5 fw-bold shadow-lg rounded-pill py-3">
+                                <i class="fa-solid fa-check-double me-2"></i> I Have Completed Today's Quest!
+                            </button>
+                        </form>
+                        <small class="text-muted d-block mt-3">⚠️ Note: If you don't check in before 12:00 AM midnight, your streak will automatically reset to 0.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
